@@ -1,16 +1,20 @@
-use std::{num::ParseIntError, ops::Sub};
-
-use crate::constants::{UNDEF_CIDR, MAX_CIDR};
+use std::num::ParseIntError;
 use custom_error::custom_error;
+use crate::constants::{UNDEF_CIDR, MAX_CIDR};
 
-custom_error!{pub ParseError
-    GenericError{position: String, value: String} = "Error parsing value in {position}. It was '{value}'",
-    MaxCidrExceeded{value: u8} = "Maximum CIDR value exceeded. It was {value}"
+custom_error!{
+    /// Describes a parsing error of some kind
+    pub ParseError
+        GenericError{position: String, value: String} = "Error parsing value in {position}. It was '{value}'",
+        MaxCidrExceeded{value: u8} = "Maximum CIDR value exceeded. It was {value}"
 }
 
-custom_error!{pub NetmaskError
-    MaxCidrExceeded{value: u8} = "Maximum CIDR value exceeded. It was {value}",
-    CalculationError = "Unable to calculate netmask due to previous error"
+custom_error!{
+    /// Describes an error related with a SubnetMask type
+    pub NetmaskError
+        UndefinedCidr = "Undefinded CIDR, cannot proceed",
+        MaxCidrExceeded{value: u8} = "Maximum CIDR value exceeded. It was {value}",
+        CalculationError = "Unable to calculate netmask due to previous error"
 }
 
 /// Represents a single IP address
@@ -52,6 +56,17 @@ impl IPAddress {
     /// * `cidr`: CIDR value of IP address
     pub fn new(b0: u8, b1: u8, b2: u8, b3: u8, cidr: u8) -> IPAddress {
         IPAddress { b0, b1, b2, b3, cidr }
+    }
+
+    /// Creates a new IP address struct
+    /// 
+    /// Parameters:
+    /// * `b0`: first byte of IP address
+    /// * `b1`: second byte of IP address
+    /// * `b2`: third byte of IP address
+    /// * `b3`: fourth byte of IP address
+    pub fn new_without_cidr(b0: u8, b1: u8, b2: u8, b3: u8) -> IPAddress {
+        IPAddress::new(b0, b1, b2, b3, UNDEF_CIDR)
     }
 
     /// Construct an IP address from string parameter
@@ -160,6 +175,10 @@ impl SubnetMask {
     /// Parameters:
     /// * `cidr`: CIDR decimal value
     pub fn from_cidr(cidr: u8) -> Result<SubnetMask, NetmaskError> {
+        if cidr == UNDEF_CIDR {
+            return Err(NetmaskError::UndefinedCidr);
+        }
+
         if cidr > MAX_CIDR {
             return Err(NetmaskError::MaxCidrExceeded { value: cidr })
         }
@@ -178,6 +197,48 @@ impl SubnetMask {
         val.b3 = (bits & 0xFF) as u8;
 
         Ok(val)
+    }
+
+    /// Constructs a subnet mask from string
+    /// 
+    /// Parameters:
+    /// * `netmask`: String value of subnet mask
+    pub fn from_string(netmask: String) -> Result<SubnetMask, ParseError> {
+        const SEP: char = '.';
+        
+        // Split into chunks
+        let chunks: Vec<&str> = netmask.split(SEP).collect();
+
+        // Parse chunks and set values
+        let b0 = chunks[0].parse();
+        if b0.is_err() {
+            return Err(ParseError::GenericError { position: "byte 0".to_string(), value: chunks[0].to_string() })
+        }
+
+        let b1 = chunks[1].parse();
+        if b1.is_err() {
+            return Err(ParseError::GenericError { position: "byte 1".to_string(), value: chunks[1].to_string() })
+        }
+
+        let b2 = chunks[2].parse();
+        if b2.is_err() {
+            return Err(ParseError::GenericError { position: "byte 2".to_string(), value: chunks[2].to_string() })
+        }
+
+        let b3 = chunks[3].parse();
+        if b3.is_err() {
+            return Err(ParseError::GenericError { position: "byte 3".to_string(), value: chunks[3].to_string() })
+        }
+
+        Ok(SubnetMask::new(b0.unwrap(), b1.unwrap(), b2.unwrap(), b3.unwrap()))
+    }
+
+    /// Constructs a subnet mask from string
+    /// 
+    /// Parameters:
+    /// * `netmask`: string slice value of subnet mask
+    pub fn from_str(netmask: &str) -> Result<SubnetMask, ParseError> {
+        SubnetMask::from_string(netmask.to_string())
     }
 
     /// Returns a human readable dot.decimal string of this Subnet mask
