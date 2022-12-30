@@ -155,6 +155,19 @@ mod tests {
     #[test]
     fn subnet_to_cidr() {
         let subnet = SubnetMask::from_str("255.255.0.0");
-        
+        // Check that it did not fail
+        assert!(subnet.is_ok());
+
+        let subnet = subnet.unwrap();
+
+        // Check and assert all values
+        assert_eq!(255, subnet.b0);
+        assert_eq!(255, subnet.b1);
+        assert_eq!(0, subnet.b2);
+        assert_eq!(0, subnet.b3);
+
+        // Convert and check CIDR
+        let cidr = subnet.to_cidr();
+        assert_eq!(16, cidr);
     }
 }
