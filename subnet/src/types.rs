@@ -241,6 +241,11 @@ impl SubnetMask {
         SubnetMask::from_string(netmask.to_string())
     }
 
+    /// Converts a Subnet Mask to CIDR value
+    pub fn to_cidr(&self) -> u8 {
+        (self.b0.count_ones() + self.b1.count_ones() + self.b2.count_ones() + self.b3.count_ones()) as u8
+    }
+
     /// Returns a human readable dot.decimal string of this Subnet mask
     pub fn to_string(&self) -> String {
         format!("{}.{}.{}.{}", self.b0, self.b1, self.b2, self.b3)
