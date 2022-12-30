@@ -132,4 +132,23 @@ mod tests {
         assert_eq!(0, nm.b2);
         assert_eq!(0, nm.b3);
     }
+
+    #[test]
+    fn subnet_calculation_correct_ip() {
+        let address = "192.168.1.2/24";
+        let ip = IPAddress::from_str(address).unwrap();
+
+        let subnet = ip.calculate_subnet();
+
+        // Assert that it did not fail
+        assert!(subnet.is_ok());
+        let subnet = subnet.unwrap();
+
+        // Check values
+        assert_eq!(192, subnet.b0);
+        assert_eq!(168, subnet.b1);
+        assert_eq!(1, subnet.b2);
+        assert_eq!(0, subnet.b3);
+        assert_eq!(24, subnet.cidr);
+    }
 }
