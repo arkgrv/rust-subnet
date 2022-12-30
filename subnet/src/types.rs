@@ -246,14 +246,3 @@ impl SubnetMask {
         format!("{}.{}.{}.{}", self.b0, self.b1, self.b2, self.b3)
     }
 }
-
-/// Counts the number of set bits
-/// 
-/// Parameters:
-/// * `b0`: first byte of IP address
-/// * `b1`: second byte of IP address
-/// * `b2`: third byte of IP address
-/// * `b3`: fourth byte of IP address
-fn count_set_bits(b0: u8, b1: u8, b2: u8, b3: u8) -> u32 {
-    b0.count_ones() + b1.count_ones() + b2.count_ones() + b3.count_ones()
-}
