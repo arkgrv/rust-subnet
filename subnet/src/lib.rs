@@ -151,4 +151,10 @@ mod tests {
         assert_eq!(0, subnet.b3);
         assert_eq!(24, subnet.cidr);
     }
+
+    #[test]
+    fn subnet_to_cidr() {
+        let subnet = SubnetMask::from_str("255.255.0.0");
+        
+    }
 }
